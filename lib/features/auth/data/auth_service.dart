@@ -1,49 +1,37 @@
+import 'package:dio/dio.dart';
+import 'package:get_storage/get_storage.dart';
+import 'package:restaurant_app/core/constants/app_constants.dart';
 class AuthService {
-  // Mock database
-  final List<Map<String, String>> _users = [];
+  final Dio _dio = Dio();
+  final box = GetStorage();
 
-  // LOGIN
-  Future<bool> login(String email, String password) async {
-    await Future.delayed(const Duration(seconds: 2));
+  // غيرنا void إلى dynamic لكي نعيد بيانات لارافل للكنترولر
+  Future<dynamic> login(String email, String password) async {
+    try {
+      final response = await _dio.post(
+        AppConstants.baseUrl + AppConstants.loginEndpoint,
+        data: {
+          'email': email,
+          'password': password,
+        },
+        options: Options(
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'ngrok-skip-browser-warning': 'true',
+          },
+        ),
+      );
 
-    final user = _users.firstWhere(
-          (u) => u['email'] == email,
-      orElse: () => {},
-    );
-
-    if (user.isEmpty) {
-      throw Exception("Account not found");
+      if (response.data['status'] == true) {
+        box.write('token', response.data['token']);
+        box.write('restaurant_id', response.data['restaurant_id']);
+        return response.data; // نعيد البيانات عند النجاح
+      }
+      return null;
+    } on DioException catch (e) {
+      print("فشل الدخول: ${e.response?.data['message']}");
+      return null;
     }
-
-    if (user['password'] != password) {
-      throw Exception("Incorrect password");
-    }
-
-    return true;
-  }
-
-  // REGISTER
-  Future<bool> register(String name, String email, String password) async {
-    await Future.delayed(const Duration(seconds: 2));
-
-    final existingUser =
-    _users.any((u) => u['email'] == email);
-
-    if (existingUser) {
-      throw Exception("Email already registered");
-    }
-
-    _users.add({
-      'name': name,
-      'email': email,
-      'password': password,
-    });
-
-    return true;
-  }
-
-  Future<bool> verifyCode(String code) async {
-    await Future.delayed(const Duration(seconds: 1));
-    return code == "1234";
   }
 }

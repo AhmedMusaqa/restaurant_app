@@ -63,7 +63,7 @@ class AppRoutes {
   static Map<String, WidgetBuilder> get routes => {
     // Auth
     login: (context) => const LoginScreen(),
-    signup: (context) => const SignupScreen(),
+   // signup: (context) => const SignupScreen(),
     forgotPassword: (context) => const ForgotPasswordScreen(),
     verification: (context) => const VerificationScreen(),
     home: (context) => const HomePage(),
